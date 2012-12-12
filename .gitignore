@@ -1,0 +1,14 @@
+.project
+.#*
+.build
+*~
+blib
+build
+Makefile.PL
+Makefile
+Makefile.old
+pm_to_blib
+*.stackdump
+Plugin-Tiny-*
+
+
