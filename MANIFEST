@@ -1,0 +1,12 @@
+LICENSE
+MANIFEST
+META.json
+META.yml
+Makefile.PL
+README
+lib/Plugin/Tiny.pm
+t/lib/TinySubPlug.pm
+t/lib/TinyTestPlugin.pm
+t/release-pod-syntax.t
+t/release-test-version.t
+t/tiny.t

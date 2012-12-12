@@ -79,7 +79,4 @@ ok ($aCore, 'aCore created');
 ok ($aCore->plugin_system->register(plugin=>'TinySubPlug', plugin_system=>$ps),'another register');
 ok ($aCore->plugin_system->register(plugin=>'TinyTestPlugin', plugin_system=>$ps),'another register');
 
-
-my $aCore=HandoverCore->new(core=>$aCore);
-
 done_testing;

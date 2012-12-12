@@ -1,0 +1,63 @@
+{
+   "abstract" : "A tiny plugin system for perl",
+   "author" : [
+      "Maurice Mengel <mauricemengel@gmail.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 4.300028, CPAN::Meta::Converter version 2.120921",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Plugin-Tiny",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "Test::Pod" : "1.41"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "0",
+            "Class::Load" : "0",
+            "Moose" : "0",
+            "namespace::autoclean" : "0",
+            "perl" : "5.006",
+            "strict" : "0",
+            "warnings" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Data::Dumper" : "0",
+            "File::Spec" : "0",
+            "FindBin" : "0",
+            "Scalar::Util" : "0",
+            "Test::More" : "0",
+            "Try::Tiny" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://rt.cpan.org/Public/Dist/Display.html?Name=Plugin-Tiny"
+      },
+      "homepage" : "https://github.com/mokko/p5-Plugin-Tiny/wiki",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/mokko/p5-Plugin-Tiny.git",
+         "web" : "https://github.com/mokko/p5-Plugin-Tiny"
+      }
+   },
+   "version" : "0.002"
+}
+
