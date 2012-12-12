@@ -33,13 +33,15 @@ use namespace::autoclean;
 
 =head1 DESCRIPTION
 
-Plugin::Tiny has a lot less code than Plugin::Simple with almost the same 
-functionality.
+Plugin::Tiny is minimalistic plugin system for perl. Each plugin is associated
+with a keyword (referred to as phase). A limitation of Plugin::Tiny is that 
+each phase can have only one plugin. 
 
-A limitation of Plugin::Tiny is that each phase can have only one plugin. 
-But you can still create bundles of plugins if you hand the plugin system down 
-to the (bundeling) plugin. That way, you can load multiple plugins for one 
-phase; you still need distinct phase labels for each plugin.
+=head2 Bundles of Plugins
+
+You can still create bundles of plugins if you hand the plugin system down to 
+the (bundeling) plugin. That way, you can load multiple plugins for one 
+phase (althoughyou still need distinct phase labels for each plugin).
 
   #in your core
   $self->plugins->register(
@@ -56,8 +58,10 @@ phase; you still need distinct phase labels for each plugin.
   my $scan1=$self->plugins->get('Scan1');
   $scan1->do_something(@args);  
 
-You may want to standardize the methods in your plugins, e.g. by using a role. 
-Perhaps you always want to require an execute method instead of do_something.
+=head2 Require a Plugin Role
+
+You may want to do a plugin role for all you plugins, e.g. to standardize
+an interface etc.
   
 =method $plugin_system->register(phase=>$phase, plugin=>$plugin_class);  
 
@@ -65,11 +69,11 @@ Optionally, you can also specify a role which your plugin will have to be able
 to apply. Remaining key value pairs are passed down to the plugin constructor: 
 
   $plugin_system->register (
-    phase=>$phase, 
-    plugin=>$plugin,
-    role=>$role,
-    plugins=>$plugin_system,
-    args=>$more_args,
+    phase=>$phase,           #optional. Defaults to last part of plugin_class 
+    plugin=>$plugin_class,   #required
+    role=>$role,             #optional
+    plugins=>$plugin_system, #optional
+    args=>$more_args,        #optional
   );
 
 A side-effect is that your plugin cannot use 'phase', 'plugin', 'role' as 
@@ -88,8 +92,8 @@ has '_registry' => (    #href with phases and plugin objects
 
 =attr prefix
 
-Optional. You can have the prefix added to all plugin classes you register so
-save some typing and force plugins in your namespace:
+Optional init argument. You can have the prefix added to all plugin classes you
+register so save some typing and force plugins in your namespace:
 
   #without prefix  
   my $ps=Plugin::Tiny->new  
@@ -107,7 +111,8 @@ has 'prefix' => (is => 'ro', isa => 'Str');
 
 =attr role
 
-A default role to be applied to all plugins. Can be overwritten in register.
+Optional init argument. A default role to be applied to all plugins. Can be 
+overwritten in register.
 
 =cut
 
@@ -160,7 +165,6 @@ sub _lastPart {    #function!
     my @parts = split('::', $plugin);
     return $parts[-1];
 }
-
 
 __PACKAGE__->meta->make_immutable;
 
