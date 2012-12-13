@@ -139,7 +139,7 @@ sub register {
     $self->{_registry}{$phase} = $plugin->new(%args);
 
     if ($role && !$plugin->does($role)) {
-        confess qq(Plugin doesn't plugin into role '$role');
+        confess qq(Plugin '$plugin' doesn't plugin into role '$role');
     }
     return $self->{_registry}{$phase};
 }
