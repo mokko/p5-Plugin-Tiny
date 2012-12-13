@@ -145,14 +145,18 @@ sub register {
 }
 
 
-=method my $plugin=$self->get_plugin ($phase);
+=method $plugin=$self->get_plugin ($phase);
 
-Returns the plugin object associated with the phase.
+Returns the plugin object associated with the phase. Returns undef if no plugin
+is registered for this phase.
 
 =cut
 
 sub get_plugin {
-    return $_[0]->{_registry}{$_[1]};
+    my $self=shift;
+    my $phase=shift or return;
+    return if (!$self->{_registry}{$phase});
+    return $self->{_registry}{$phase};
 }
 
 

@@ -1,0 +1,5 @@
+{next}
+- get_plugin returns undef if phase or plugin not found
+- various pod updates
+
+v0.002 released to CPAN
