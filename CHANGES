@@ -1,4 +1,5 @@
 {next}
+- method default_phase is now public
 - allow role=>undef in register to unset a global role temporarily
 - better error messages
 - get_plugin returns undef if phase or plugin not found

@@ -108,17 +108,17 @@ has 'role' => (is => 'ro', isa => 'Str');
 =method $plugin_system->register(phase=>$phase, plugin=>$plugin_class);  
 
 Registers a plugin, e.g. uses it and makes a new plugin object. Needs a
-plugin. If you don't specify a phase it, it makes a default phase from the 
-plugin class name.
+plugin. If you don't specify a phase it, it uses a default phase from the 
+plugin class name. See method C<default_phae> for details.
 
 Optionally, you can also specify a role which your plugin will have to be able 
-to apply. Specify role=>undef to overwrite global roles.
+to apply. Specify role=>'' to unset global roles.
 
 Remaining key value pairs are passed down to the plugin constructor: 
 
   $plugin_system->register (
-    phase=>$phase,           #optional. Defaults to last part of plugin_class 
     plugin=>$plugin_class,   #required
+    phase=>$phase,           #optional
     role=>$role,             #optional
     plugins=>$plugin_system, #optional
     args=>$more_args,        #optional
@@ -140,7 +140,10 @@ sub register {
     if ($self->prefix) {
         $plugin = $self->prefix . $plugin;
     }
-    my $phase = $args{phase} ? delete $args{phase} : $self->defaultPhase($plugin);
+    my $phase =
+      $args{phase}
+      ? delete $args{phase}
+      : $self->default_phase($plugin);
 
     my $role = $self->role if $self->role;    #default role
     $role = delete $args{role} if defined $args{role};
@@ -183,14 +186,14 @@ Returns scalar;
 =cut
 
 
-sub defaultPhase {   
-    my $self=shift;
+sub default_phase {
+    my $self   = shift;
     my $plugin = shift;    #a class name
 
     if ($self->prefix) {
-        my $phase=$plugin;
-        $phase=~s/$self->prefix//;
-        return $phase=~s/:://g;
+        my $phase = $plugin;
+        $phase =~ s/$self->prefix//;
+        return $phase =~ s/:://g;
     }
     else {
         my @parts = split('::', $plugin);
