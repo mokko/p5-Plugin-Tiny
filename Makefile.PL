@@ -12,10 +12,8 @@ my %WriteMakefileArgs = (
   "ABSTRACT" => "A tiny plugin system for perl",
   "AUTHOR" => "Maurice Mengel <mauricemengel\@gmail.com>",
   "BUILD_REQUIRES" => {
-    "Data::Dumper" => 0,
     "File::Spec" => 0,
     "FindBin" => 0,
-    "Scalar::Util" => 0,
     "Test::More" => 0,
     "Try::Tiny" => 0
   },
@@ -30,11 +28,12 @@ my %WriteMakefileArgs = (
     "Carp" => 0,
     "Class::Load" => 0,
     "Moose" => 0,
+    "Scalar::Util" => 0,
     "namespace::autoclean" => 0,
     "strict" => 0,
     "warnings" => 0
   },
-  "VERSION" => "0.002",
+  "VERSION" => "0.003",
   "test" => {
     "TESTS" => "t/*.t"
   }

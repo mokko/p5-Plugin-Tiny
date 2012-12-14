@@ -1,0 +1,10 @@
+{next}
+- add two methods to get phase and plugin's class name 
+- add debug init arg
+- method default_phase is now public and works a little differently
+- allow role=>undef in register to unset a global role temporarily
+- better error messages
+- get_plugin returns undef if phase or plugin not found
+- various pod updates
+
+v0.002 released to CPAN

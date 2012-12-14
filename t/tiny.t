@@ -8,7 +8,7 @@ use Try::Tiny;
 use FindBin;
 use File::Spec;
 use Scalar::Util 'blessed';
-use Data::Dumper;
+#use Data::Dumper;
 use lib File::Spec->catfile('t', 'lib');
 
 use_ok('Plugin::Tiny');
@@ -25,8 +25,6 @@ has 'core'=> (is=>'ro', isa=>'Object', required=>1);
 
 
 package main;
-
-
 
 my $ps = Plugin::Tiny->new();
 ok($ps, 'new');
@@ -66,6 +64,12 @@ finally {
 
 my ($p1, $p2);
 ok($p1 = $ps->get_plugin('foo'), 'get p1');
+
+is ($ps->default_phase('TinyTestPlugin'),'TinyTestPlugin', 'default_phase');
+is ($ps->get_class ($p1), 'TinyTestPlugin', 'class is good');
+is ($ps->get_phase ($p1), 'foo', 'phase foo');
+
+
 is($p1->do_something, 'doing something', 'execute return value');
 ok($p1->register_another_plugin, 'registering a new plug from inside a plug');
 ok($p2 = $ps->get_plugin('bar'), 'get p2');
@@ -73,6 +77,7 @@ is( $p2->do_something,
     'a plugin that is loaded by another plugin',
     'return looks good'
 );
+is ($ps->get_phase ($p2), 'bar', 'phase bar');
 
 my $aCore=SampleCore->new(plugin_system=>$ps);
 ok ($aCore, 'aCore created');

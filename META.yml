@@ -3,10 +3,8 @@ abstract: 'A tiny plugin system for perl'
 author:
   - 'Maurice Mengel <mauricemengel@gmail.com>'
 build_requires:
-  Data::Dumper: 0
   File::Spec: 0
   FindBin: 0
-  Scalar::Util: 0
   Test::More: 0
   Try::Tiny: 0
 configure_requires:
@@ -22,6 +20,7 @@ requires:
   Carp: 0
   Class::Load: 0
   Moose: 0
+  Scalar::Util: 0
   namespace::autoclean: 0
   perl: 5.006
   strict: 0
@@ -30,4 +29,4 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Plugin-Tiny
   homepage: https://github.com/mokko/p5-Plugin-Tiny/wiki
   repository: git://github.com/mokko/p5-Plugin-Tiny.git
-version: 0.002
+version: 0.003
