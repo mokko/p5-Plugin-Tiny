@@ -7,7 +7,7 @@ use Class::Load 'load_class';
 use Moose;
 use namespace::autoclean;
 use Scalar::Util 'blessed';
-use Data::Dumper;
+#use Data::Dumper;
 
 =head1 SYNOPSIS
 
@@ -216,7 +216,7 @@ sub default_phase {
     }
 }
 
-=method $class=$ps->class ($plugin); 
+=method $class=$ps->get_class ($plugin); 
 
 returns the plugin's class. A bit like C<ref $plugin>. Not sure what it returns
 on error. Todo!
@@ -229,7 +229,7 @@ sub get_class {
     blessed($plugin);
 }
 
-=method $phase=$ps->get_phase ($plugin_class); 
+=method $phase=$ps->get_phase ($plugin); 
 
 returns the plugin's phase. Returns undef on failure. Normally, you should not
 need this.
@@ -240,7 +240,8 @@ need this.
 sub get_phase {
     my $self         = shift;
     my $plugin       = shift or return;
-    my $current_class = $self->class($plugin);
+    blessed($plugin);
+    my $current_class = $self->get_class($plugin);
     #print 'z:['.join(' ', keys %{$self->{_registry}})."]\n";
     foreach my $phase (keys %{$self->{_registry}}) {
         my $registered_class=blessed ($self->{_registry}{$phase});
