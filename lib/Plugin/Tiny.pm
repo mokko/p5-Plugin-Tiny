@@ -63,24 +63,6 @@ phase (althoughyou still need distinct phase labels for each plugin).
 You may want to do a plugin role for all you plugins, e.g. to standardize
 an interface etc.
   
-=method $plugin_system->register(phase=>$phase, plugin=>$plugin_class);  
-
-Optionally, you can also specify a role which your plugin will have to be able 
-to apply. Remaining key value pairs are passed down to the plugin constructor: 
-
-  $plugin_system->register (
-    phase=>$phase,           #optional. Defaults to last part of plugin_class 
-    plugin=>$plugin_class,   #required
-    role=>$role,             #optional
-    plugins=>$plugin_system, #optional
-    args=>$more_args,        #optional
-  );
-
-A side-effect is that your plugin cannot use 'phase', 'plugin', 'role' as 
-named arguments.
-
-Returns the newly created plugin object on success. Confesses on error.
-
 =cut
 
 has '_registry' => (    #href with phases and plugin objects
@@ -123,23 +105,51 @@ has 'role' => (is => 'ro', isa => 'Str');
 # METHODS
 #
 
+=method $plugin_system->register(phase=>$phase, plugin=>$plugin_class);  
+
+Registers a plugin, e.g. uses it and makes a new plugin object. Needs a
+plugin. If you don't specify a phase it, it makes a default phase from the 
+plugin class name.
+
+Optionally, you can also specify a role which your plugin will have to be able 
+to apply. Specify role=>undef to overwrite global roles.
+
+Remaining key value pairs are passed down to the plugin constructor: 
+
+  $plugin_system->register (
+    phase=>$phase,           #optional. Defaults to last part of plugin_class 
+    plugin=>$plugin_class,   #required
+    role=>$role,             #optional
+    plugins=>$plugin_system, #optional
+    args=>$more_args,        #optional
+  );
+
+A side-effect is that your plugin cannot use 'phase', 'plugin', 'role' as 
+named arguments.
+
+Returns the newly created plugin object on success. Confesses on error.
+
+=cut
+
+
 sub register {
     my $self   = shift;
     my %args   = @_;
     my $plugin = delete $args{plugin} or confess "Need plugin";
+
     if ($self->prefix) {
         $plugin = $self->prefix . $plugin;
     }
-    my $phase = $args{phase} ? delete $args{phase} : _lastPart($plugin);
+    my $phase = $args{phase} ? delete $args{phase} : $self->defaultPhase($plugin);
 
     my $role = $self->role if $self->role;    #default role
-    $role = delete $args{role} if $args{role};
+    $role = delete $args{role} if defined $args{role};
 
     load_class($plugin) or confess "Can't load $plugin";
     $self->{_registry}{$phase} = $plugin->new(%args);
 
     if ($role && !$plugin->does($role)) {
-        confess qq(Plugin '$plugin' doesn't plugin into role '$role');
+        confess qq(Plugin '$plugin' doesn't do role '$role');
     }
     return $self->{_registry}{$phase};
 }
@@ -153,22 +163,44 @@ is registered for this phase.
 =cut
 
 sub get_plugin {
-    my $self=shift;
-    my $phase=shift or return;
+    my $self = shift;
+    my $phase = shift or return;
     return if (!$self->{_registry}{$phase});
     return $self->{_registry}{$phase};
 }
 
 
+=method $self->defaultPhase ($plugin_class);
+
+Makes a default phase from a class name. If prefix is defined it use tail minus 
+'::'. Otherwise just last element of the class name.
+
+For My::Plugin::Long::Example and prefix='My::Plugin::' this results in 
+'Long::Example' and without prefix it would be 'Example'.
+
+Returns scalar;
+
+=cut
+
+
+sub defaultPhase {   
+    my $self=shift;
+    my $plugin = shift;    #a class name
+
+    if ($self->prefix) {
+        my $phase=$plugin;
+        $phase=~s/$self->prefix//;
+        return $phase=~s/:://g;
+    }
+    else {
+        my @parts = split('::', $plugin);
+        return $parts[-1];
+    }
+}
+
 #
 # PRIVATE
 #
-
-sub _lastPart {    #function!
-    my $plugin = shift;                 #a class name
-    my @parts = split('::', $plugin);
-    return $parts[-1];
-}
 
 __PACKAGE__->meta->make_immutable;
 
