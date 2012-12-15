@@ -170,11 +170,42 @@ sub register {
     return $self->{_registry}{$phase};
 }
 
+=method register_bundle($bundle);
+
+Registers a bundle of plugins. A bundle is just a hashRef with info needed
+to issue a series of register calls.
+
+  my $bundle = {
+      'Store::One' => {   
+          phase  => 'Store',
+          role   => undef,
+          dbfile => $self->core->config->{main}{dbfile},
+        },
+       'Scan::Monitor'=> {   
+          core   => $self->core
+        },
+  };
+
+Confesses if a plugin cannot be registered. Otherwise returns $bundle or undef.
+
+=cut
+
+
+sub register_bundle {
+    my $self=shift;
+    my $bundle=shift or return; 
+    foreach my $plugin (keys %{$bundle}) {
+        my %args=%{$bundle->{$plugin}};
+        $args{plugin}=$plugin;
+        $self->register(%args) or confess "Registering $plugin failed";
+    }
+    return $bundle;
+}
+
 
 =method $plugin=$ps->get_plugin ($phase);
 
-Returns the plugin object associated with the phase. Returns undef if no plugin
-is registered for this phase.
+Returns the plugin object associated with the phase. Returns undef on failure.
 
 =cut
 
@@ -186,22 +217,25 @@ sub get_plugin {
 }
 
 
-=method $ps->defaultPhase ($plugin_class);
+=method $ps->default_phase ($plugin_class);
 
 Makes a default phase from a class name. If prefix is defined it use tail minus 
 '::'. Otherwise just last element of the class name.
 
-For My::Plugin::Long::Example and prefix='My::Plugin::' this results in 
-'Long::Example' and without prefix it would be 'Example'.
+    $ps=Plugin-Tiny->new;
+    $ps->default_phase(My::Plugin::Long::Example); # returns 'Example'
 
-Returns scalar;
+    $ps=Plugin-Tiny->new(prefix=>'My::Plugin::');
+    $ps->default_phase(My::Plugin::Long::Example); # returns 'LongExample'
+
+Returns scalar or undef.
 
 =cut
 
 
 sub default_phase {
     my $self   = shift;
-    my $plugin = shift;    #a class name
+    my $plugin = shift or return;    #a class name
 
     if ($self->prefix) {
         my $phase  = $plugin;
@@ -256,5 +290,6 @@ sub get_phase {
 #
 
 __PACKAGE__->meta->make_immutable;
+
 
 1;

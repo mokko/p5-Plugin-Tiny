@@ -1,0 +1,26 @@
+=pod
+Todo: Might go in extra package Plugin::Tiny::Bundle. But how does the 
+Plugin::Tiny::Bundle talk to Plugin::Tiny objects?
+      my $bundler=Plugin::Tiny::Bundle->new(
+        plugin_system=>$ps,  #really? required
+        bundle=>$bundle
+        #could also receive default params
+      );
+
+      #will there be a Role::Bundle?
+
+      package Bundle::Example;
+      sub bundle {[{plugin=>A},{plugin=>B}]}
+      sub execute {#do_something}
+      1;
+
+      #Plugin::Tiny::Bundle
+      $bundle=$bundler->load(bundle=>'Bundle::Class'); #use $class; return unclear
+      $bundler->get_bundle(); #returns hashref describing plugins in bundle
+      $bundler->remove(plugin=>'Plugin::A');
+      $bundler->add(plugin=>'Plugin::B', phase=>'x');
+      $bundler->register(); #registers all plugs in bundle
+      $bundler->execute(); #makes sense?  
+
+      #is there a way to return the plugins which were made? Not through 
+      #$bundler, but through plugin_system.
