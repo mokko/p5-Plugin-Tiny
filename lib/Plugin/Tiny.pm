@@ -62,7 +62,7 @@ phase (you still need distinct phase labels for each plugin).
   my $scan1=$self->plugins->get('Scan1');
   $scan1->do_something(@args);  
 
-=head2 Require a Plugin Role
+=head2 Require a Plugin Role?
 
 You may want to do a plugin role for all you plugins, e.g. to standardize
 an interface etc.
@@ -106,7 +106,7 @@ has 'prefix' => (is => 'ro', isa => 'Str');
 =attr role
 
 Optional init argument. A default role to be applied to all plugins. Can be 
-overwritten in register.
+overwritten in C<register>.
 
 =cut
 
@@ -117,11 +117,13 @@ has 'role' => (is => 'ro', isa => 'Str');
 # METHODS
 #
 
-=method $ps->register(phase=>$phase, plugin=>$plugin_class);  
+=method register
 
 Registers a plugin, e.g. uses it and makes a new plugin object. Needs a
 plugin. If you don't specify a phase it, it uses a default phase from the 
 plugin class name. See method C<default_phae> for details.
+
+  $ps->register(phase=>$phase, plugin=>$plugin_class);  
 
 Optionally, you can also specify a role which your plugin will have to be able 
 to apply. Specify role=>undef to unset global roles.
@@ -170,12 +172,15 @@ sub register {
     return $self->{_registry}{$phase};
 }
 
-=method register_bundle($bundle);
+=method register_bundle;
 
-Registers a bundle of plugins. A bundle is just a hashRef with info needed
-to issue a series of register calls.
+Registers a bundle of plugins in no particular order. A bundle is just a 
+hashRef with info needed to issue a series of register calls (see C<register>).
 
-  my $bundle = {
+Confesses if a plugin cannot be registered. Otherwise returns $bundle or undef.
+
+  sub bundle{
+    return {
       'Store::One' => {   
           phase  => 'Store',
           role   => undef,
@@ -184,9 +189,16 @@ to issue a series of register calls.
        'Scan::Monitor'=> {   
           core   => $self->core
         },
-  };
+    };
+  }
+  $ps->register_bundle(bundle)
 
-Confesses if a plugin cannot be registered. Otherwise returns $bundle or undef.
+If you want to add or remove plugins, use hashref as usual:
+  undef $bundle->{$plugin}; #remove a plugin using package name
+  $bundle->{'My::Plugin'}={phase=>'foo'}; #add another plugin
+
+To facilitate extending your plugins perhaps you put them the hashref in a 
+separate sub, so you can extend it or remove plugins in a child bundle.
 
 =cut
 
@@ -203,9 +215,11 @@ sub register_bundle {
 }
 
 
-=method $plugin=$ps->get_plugin ($phase);
+=method get_plugin
 
 Returns the plugin object associated with the phase. Returns undef on failure.
+
+  $plugin=$ps->get_plugin ($phase);
 
 =cut
 
@@ -217,10 +231,11 @@ sub get_plugin {
 }
 
 
-=method $ps->default_phase ($plugin_class);
+=method default_phase;
 
-Makes a default phase from a class name. If prefix is defined it use tail minus 
-'::'. Otherwise just last element of the class name.
+Makes a default phase from a class name. Expects a $plugin_class. If prefix 
+is defined it use tail and removes remaining '::'. Without prefix default is 
+just the last element of the class name:
 
     $ps=Plugin-Tiny->new;
     $ps->default_phase(My::Plugin::Long::Example); # returns 'Example'
@@ -250,10 +265,12 @@ sub default_phase {
     }
 }
 
-=method $class=$ps->get_class ($plugin); 
+=method get_class 
 
 returns the plugin's class. A bit like C<ref $plugin>. Not sure what it returns
 on error. Todo!
+
+  $class=$ps->get_class ($plugin);
 
 =cut 
 
@@ -263,10 +280,11 @@ sub get_class {
     blessed($plugin);
 }
 
-=method $phase=$ps->get_phase ($plugin); 
+=method get_phase
 
 returns the plugin's phase. Returns undef on failure. Normally, you should not
-need this.
+need this:
+  $phase=$ps->get_phase ($plugin);
 
 =cut 
 
@@ -290,6 +308,5 @@ sub get_phase {
 #
 
 __PACKAGE__->meta->make_immutable;
-
 
 1;

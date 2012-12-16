@@ -1,4 +1,7 @@
 {next}
+
+v0.004
+- more pod cleanup: clean method names for TOC
 - add method register_bundle
 
 v.003
