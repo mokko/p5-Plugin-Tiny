@@ -34,39 +34,73 @@ Plugin::Tiny is minimalistic plugin system for perl. Each plugin is associated
 with a keyword (referred to as phase). A limitation of Plugin::Tiny is that 
 each phase can have only one plugin. 
 
-=head2 Bundles of Plugins
+=head2 Your Plugins
 
-You can still create bundles of plugins if you hand the plugin system down to 
-the (bundeling) plugin. That way, you can load multiple plugins for one 
-phase (you still need distinct phase labels for each plugin).
+Plugin::Tiny requires that your plugins are objects (a package with new). 
+Plugin::Tiny uses Moose internally, but this being perl you are of course free 
+to use whatever object system you like:
+
+    package My::Plugin; #a complete plugin that doesn't do very much
+    use Moose; 
+    
+    sub do_something {
+        print "Hello World\n";
+    }
+    
+    1;
+
+=head2 Recommendation: First Register Then Do Things
+
+Plugin::Tiny suggests that you first load all your plugins (during the 
+register) before you actually do something with them. Internal require/use of 
+your packages is deferred to runtime. You can control order in which plugins 
+are loaded (in the order you call C<register>), but if you manage to load all 
+of them before you do anything, you can forget about order.
+
+You know Plugin::Tiny's phases at compile time, but not which plugins will be
+loaded.
+
+=head2 Recommendation: Require a Plugin Role
+
+You may want to do a plugin role for all you plugins, e.g. to standardize
+the interface for your plugins. Perhaps to make sure that a specific sub is
+available in the plugin:
+
+  package My::Plugin; 
+  use Moose;
+  with 'Your::App::Role::Plugin';
+  #...
+
+=head2 Plugin Bundles
+
+You can create bundles of plugins if you hand the plugin system down to 
+the (bundleing) plugin. That way, you can load multiple plugins for one 
+phase. You still need unique phases for each plugin:
 
   #in your core
   use Moose; #optional
   has 'plugins'=>(
     is=>'ro',
     isa=>'Plugin::Tiny', 
-    default=>sub{}
+    default=>sub{Plugin::Tiny->new},
   );
 
   $self->plugins->register(
     phase=>'Scan', 
-    plugin=>'Plugin::ScanBundle', 
+    plugin=>'PluginBundle', 
     plugins=>$self->plugins, #plugin system
   );
 
-  #in Plugin::ScanBundle
+  #in PluginBundle
   has 'plugins'=>(is=>'ro', isa=>'Plugin::Tiny', required=>1); 
-  $self->plugins->register (plugin=>'Plugin::Scan1'); 
-  $self->plugins->register (plugin=>'Plugin::Scan2'); 
+  $self->plugins->register_bundle({Plugin::One=>{},Plugin::Two=>{}});    
+  # almost the same as two distinct register calls    
+  $self->plugins->register (plugin=>'Plugin::One'); #phase defaults to 'One' 
+  $self->plugins->register (plugin=>'Plugin::Two'); #phase defaults to 'Two'
   
-  my $scan1=$self->plugins->get('Scan1');
+  my $one=$self->plugins->get('One');
   $scan1->do_something(@args);  
 
-=head2 Require a Plugin Role?
-
-You may want to do a plugin role for all you plugins, e.g. to standardize
-an interface etc.
-  
 =cut
 
 has '_registry' => (    #href with phases and plugin objects
