@@ -1,4 +1,8 @@
 {next}
+v0.006
+- slightly better tests
+- confess if phase already registered; overwrite with force
+- even more pod cleanup
 v0.005
 - more pod and pod cleanup 
 v0.004
