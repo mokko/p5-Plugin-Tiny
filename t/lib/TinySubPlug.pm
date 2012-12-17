@@ -8,4 +8,5 @@ sub do_something {
     'a plugin that is loaded by another plugin';
 }
 
+
 1;
