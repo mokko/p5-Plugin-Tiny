@@ -2,7 +2,7 @@ NAME
     Plugin::Tiny - A tiny plugin system for perl
 
 VERSION
-    version 0.004
+    version 0.005
 
 SYNOPSIS
       #in your core
@@ -67,7 +67,7 @@ DESCRIPTION
     the (bundleing) plugin. That way, you can load multiple plugins for one
     phase. You still need unique phases for each plugin:
 
-      #in your core
+      package My::Core;
       use Moose; #optional
       has 'plugins'=>(
         is=>'ro',
@@ -81,15 +81,18 @@ DESCRIPTION
         plugins=>$self->plugins, #plugin system
       );
 
-      #in PluginBundle
+      package PluginBundle;
       has 'plugins'=>(is=>'ro', isa=>'Plugin::Tiny', required=>1); 
-      $self->plugins->register_bundle({Plugin::One=>{},Plugin::Two=>{}});    
-      # almost the same as two distinct register calls    
-      $self->plugins->register (plugin=>'Plugin::One'); #phase defaults to 'One' 
-      $self->plugins->register (plugin=>'Plugin::Two'); #phase defaults to 'Two'
+
+      #phase defaults to 'One' and 'Two' 
+      $self->plugins->register_bundle({Plugin::One=>{},Plugin::Two=>{}});
+  
+      #more or less the same as:    
+      $self->plugins->register (plugin=>'Plugin::One');  
+      $self->plugins->register (plugin=>'Plugin::Two'); 
   
       my $one=$self->plugins->get('One');
-      $scan1->do_something(@args);
+      $one->do_something(@args);
 
 ATTRIBUTES
   debug
@@ -176,7 +179,7 @@ METHODS
 
       $plugin=$ps->get_plugin ($phase);
 
-  default_phase;
+  default_phase
     Makes a default phase from a class name. Expects a $plugin_class. If
     prefix is defined it use tail and removes remaining '::'. Without prefix
     default is just the last element of the class name:

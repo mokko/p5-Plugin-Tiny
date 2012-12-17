@@ -1,7 +1,7 @@
 #ABSTRACT: A tiny plugin system for perl
 package Plugin::Tiny;
 {
-  $Plugin::Tiny::VERSION = '0.004';
+  $Plugin::Tiny::VERSION = '0.005';
 }
 use strict;
 use warnings;
@@ -10,6 +10,7 @@ use Class::Load 'load_class';
 use Moose;
 use namespace::autoclean;
 use Scalar::Util 'blessed';
+
 #use Data::Dumper;
 
 
@@ -21,7 +22,7 @@ has '_registry' => (    #href with phases and plugin objects
 );
 
 
-has 'debug'=>(is=>'ro', isa=>'Bool', default=> sub{0});
+has 'debug' => (is => 'ro', isa => 'Bool', default => sub {0});
 
 
 has 'prefix' => (is => 'ro', isa => 'Str');
@@ -53,11 +54,12 @@ sub register {
     $role = delete $args{role} if exists $args{role};
 
     load_class($plugin) or confess "Can't load '$plugin'";
- 
+
     if ($role && !$plugin->does($role)) {
         confess qq(Plugin '$plugin' doesn't do role '$role');
     }
-    $self->{_registry}{$phase} = $plugin->new(%args) || confess "Can't make $plugin";
+    $self->{_registry}{$phase} = $plugin->new(%args)
+      || confess "Can't make $plugin";
     print "register $plugin [$phase]\n" if $self->debug;
     return $self->{_registry}{$phase};
 }
@@ -65,11 +67,11 @@ sub register {
 
 
 sub register_bundle {
-    my $self=shift;
-    my $bundle=shift or return; 
+    my $self = shift;
+    my $bundle = shift or return;
     foreach my $plugin (keys %{$bundle}) {
-        my %args=%{$bundle->{$plugin}};
-        $args{plugin}=$plugin;
+        my %args = %{$bundle->{$plugin}};
+        $args{plugin} = $plugin;
         $self->register(%args) or confess "Registering $plugin failed";
     }
     return $bundle;
@@ -86,9 +88,8 @@ sub get_plugin {
 
 
 
-
 sub default_phase {
-    my $self   = shift;
+    my $self = shift;
     my $plugin = shift or return;    #a class name
 
     if ($self->prefix) {
@@ -105,6 +106,7 @@ sub default_phase {
 }
 
 
+
 sub get_class {
     my $self = shift;
     my $plugin = shift or return;
@@ -114,17 +116,18 @@ sub get_class {
 
 
 sub get_phase {
-    my $self         = shift;
-    my $plugin       = shift or return;
+    my $self = shift;
+    my $plugin = shift or return;
     blessed($plugin);
     my $current_class = $self->get_class($plugin);
+
     #print 'z:['.join(' ', keys %{$self->{_registry}})."]\n";
     foreach my $phase (keys %{$self->{_registry}}) {
-        my $registered_class=blessed ($self->{_registry}{$phase});
+        my $registered_class = blessed($self->{_registry}{$phase});
         print "[$phase] $registered_class === $current_class\n";
         return $phase if ("$registered_class" eq "$current_class");
     }
-            
+
 }
 
 #
@@ -144,7 +147,7 @@ Plugin::Tiny - A tiny plugin system for perl
 
 =head1 VERSION
 
-version 0.004
+version 0.005
 
 =head1 SYNOPSIS
 
@@ -214,7 +217,7 @@ You can create bundles of plugins if you hand the plugin system down to
 the (bundleing) plugin. That way, you can load multiple plugins for one 
 phase. You still need unique phases for each plugin:
 
-  #in your core
+  package My::Core;
   use Moose; #optional
   has 'plugins'=>(
     is=>'ro',
@@ -228,15 +231,18 @@ phase. You still need unique phases for each plugin:
     plugins=>$self->plugins, #plugin system
   );
 
-  #in PluginBundle
+  package PluginBundle;
   has 'plugins'=>(is=>'ro', isa=>'Plugin::Tiny', required=>1); 
-  $self->plugins->register_bundle({Plugin::One=>{},Plugin::Two=>{}});    
-  # almost the same as two distinct register calls    
-  $self->plugins->register (plugin=>'Plugin::One'); #phase defaults to 'One' 
-  $self->plugins->register (plugin=>'Plugin::Two'); #phase defaults to 'Two'
+
+  #phase defaults to 'One' and 'Two' 
+  $self->plugins->register_bundle({Plugin::One=>{},Plugin::Two=>{}});
+  
+  #more or less the same as:    
+  $self->plugins->register (plugin=>'Plugin::One');  
+  $self->plugins->register (plugin=>'Plugin::Two'); 
   
   my $one=$self->plugins->get('One');
-  $scan1->do_something(@args);  
+  $one->do_something(@args);  
 
 =head1 ATTRIBUTES
 
@@ -326,7 +332,7 @@ Returns the plugin object associated with the phase. Returns undef on failure.
 
   $plugin=$ps->get_plugin ($phase);
 
-=head2 default_phase;
+=head2 default_phase
 
 Makes a default phase from a class name. Expects a $plugin_class. If prefix 
 is defined it use tail and removes remaining '::'. Without prefix default is 
