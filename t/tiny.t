@@ -107,7 +107,17 @@ ok( $ps->register(
         role          => 'TestRolePlugin',
         force         => 1
     ),
-    'register with role succeeds'
+    'register with single roles succeeds'
+);
+
+ok( $ps->register(
+        phase         => 'foo',
+        plugin        => 'TinyTestPlugin',    #required
+        plugin_system => $ps,
+        role          => ['TestRolePlugin','TestRolePlugin'],
+        force         => 1
+    ),
+    'register with multiple roles succeeds'
 );
 
 #try {

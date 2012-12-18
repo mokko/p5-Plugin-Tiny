@@ -6,22 +6,26 @@ use Carp 'confess';
 use Class::Load 'load_class';
 use Moose;
 use namespace::autoclean;
-use Scalar::Util 'blessed';
+use Scalar::Util 'blessed', 'reftype';
+
 #use Data::Dumper;
 
 =head1 SYNOPSIS
 
-  use Plugin::Tiny;           #in your core
+  #a complete 'Hello World' plugin
+  package My::Plugin; 
+  use Moose; #optional. Required is an object with new as constructor
+    
+  sub do_something { print "Hello World @_\n" }
+    
+  1;
+
+  #in your core
+  use Plugin::Tiny;           
   my $ps=Plugin::Tiny->new(); #plugin system
   
-  #load plugin_class (and perhaps phase) from your configuration
-  $ps->register(
-    phase=>$phase,         #optional
-    plugin=>$plugin_class, #required
-    role=>$role,           #optional
-    arg1=>$arg1,           #optional
-    arg2=>$arg2,           #optional
-  );
+  #load plugin_class from your configuration
+  $ps->register(plugin=>'My::Plugin');
 
   #execute your plugin's methods 
   my $plugin=$ps->get_plugin ($phase); 
@@ -44,7 +48,7 @@ has '_registry' => (    #href with phases and plugin objects
 
 =attr debug
 
-expects a boolean. Prints additional info to STDOUT.
+Optional. Expects a boolean. Prints additional info to STDOUT.
 
 =cut
 
@@ -52,7 +56,7 @@ has 'debug' => (is => 'ro', isa => 'Bool', default => sub {0});
 
 =attr prefix
 
-Optional init argument. You can have the prefix added to all plugin classes you
+Optional. You can have the prefix added to all plugin classes you
 register so save some typing and force plugins in your namespace:
 
   #without prefix  
@@ -71,12 +75,17 @@ has 'prefix' => (is => 'ro', isa => 'Str');
 
 =attr role
 
-Optional init argument. A default role to be applied to all plugins. Can be 
+Optional. One or more roles that all plugins have to be able to do. Can be 
 overwritten in C<register>.
+
+    #either as ArrayRef 
+    role=>['Role::One', Role::Two]
+    #or a scalar
+    role=>'Role::One'
 
 =cut
 
-has 'role' => (is => 'ro', isa => 'Str');
+has 'role' => (is => 'ro', isa => 'ArrayRef[Str]');
 
 
 #
@@ -87,39 +96,8 @@ has 'role' => (is => 'ro', isa => 'Str');
 
 Registers a plugin, i.e. loads it and makes a new plugin object. Needs a
 plugin package name (plugin). Returns the newly created plugin object on 
-success. Confesses on error.
-
-=head3 Arguments
-
-=head4 plugin
-
-The package name of the plugin. Required. Internally, the value of C<prefix>
-is prepended to plugin, if set.
-
-=head4 phase
-
-A phase asociated with the plugin. Optional. If not specified, Plugin::Tiny 
-uses C<default_phase> to determine the phase.
-
-=head4 role
-
-A role that the plugin has to appply. Optional. Specify role=>undef to unset 
-global roles.
-
-=head4 force
-
-Force re-registration of a previously used phase. Optional.
-
-Plugin::Tiny confesses if you try to register a phase that has previously been
-assigned. To overwrite this message make force true.
-
-With force both plugins will be loaded (required, imported) and both return new 
-objects for their respective plugin classes, but after the second plugin is 
-made, the first one can't be accessed anymore through get_plugin.
-
-=head4 all other arguments
-
-Remaining arguments are passed down to the plugin constructor. Optional.
+success. Confesses on error. Remaining arguments are passed down to the 
+plugin constructor:
 
     $obj=$ps->register(
         plugin=>$plugin_class,   #required
@@ -130,6 +108,35 @@ Remaining arguments are passed down to the plugin constructor. Optional.
 
 N.B. A side-effect of these arguments is that your plugin cannot use 'phase', 
 'plugin', 'role', 'force' as named arguments.
+
+=head3 plugin
+
+The package name of the plugin. Required. Internally, the value of C<prefix>
+is prepended to plugin, if set.
+
+=head3 phase
+
+A phase asociated with the plugin. Optional. If not specified, Plugin::Tiny 
+uses C<default_phase> to determine the phase.
+
+=head3 role
+
+One or more roles that the plugin has to appply. Optional. Specify role=>undef 
+to unset global roles.
+
+    role=>'Single::Role' #or
+    role=>['Role::One','Role:Two']
+
+=head3 force
+
+Force re-registration of a previously used phase. Optional.
+
+Plugin::Tiny confesses if you try to register a phase that has previously been
+assigned. To overwrite this message make force true.
+
+With force both plugins will be loaded (required, imported) and both return new 
+objects for their respective plugin classes, but after the second plugin is 
+made, the first one can't be accessed anymore through get_plugin.
 
 =cut
 
@@ -147,24 +154,35 @@ sub register {
       ? delete $args{phase}
       : $self->default_phase($plugin);
 
-    my $role = $self->role if $self->role;    #default role
-    $role = delete $args{role} if exists $args{role};
-
-    if (defined $self->{_registry}{$phase} && ! $args{force}) {
+    if (defined $self->{_registry}{$phase} && !$args{force}) {
         confess <<END
 There is already a plugin registered under this phase. If you really want to 
 overwrite the current plugin with a new one, use 'force=>1'.
 END
-    } 
+    }
 
     load_class($plugin) or confess "Can't load '$plugin'";
 
-    if ($role && !$plugin->DOES($role)) {
-        confess qq(Plugin '$plugin' doesn't do role '$role');
+    my $roles = $self->role if $self->role;    #default role
+    $roles = delete $args{role} if exists $args{role};
+
+    #rewrite scalar as arrayref
+    $roles = [$roles] if ($roles && !ref $roles);
+
+    if ($roles && reftype $roles eq 'ARRAY') {
+        foreach my $role (@{$roles}) {
+            if ($plugin->DOES($role)) {
+                $self->_debug ("Plugin '$plugin' does role '$role'");
+            }
+            else {
+                confess qq(Plugin '$plugin' doesn't do role '$role');
+            }
+        }
     }
+
     $self->{_registry}{$phase} = $plugin->new(%args)
       || confess "Can't make $plugin";
-    print "register $plugin [$phase]\n" if $self->debug;
+    $self->_debug ("register $plugin [$phase]");
     return $self->{_registry}{$phase};
 }
 
@@ -261,10 +279,12 @@ sub default_phase {
 
 =method get_class 
 
-returns the plugin's class. A bit like C<ref $plugin>. Not sure what it returns
-on error. Todo!
+Returns the plugin's class. 
 
   $class=$ps->get_class ($plugin);
+
+Todo: Not sure what it returns on error.
+
 
 =cut 
 
@@ -299,21 +319,6 @@ sub get_phase {
 }
 
 =head1 SOME THOUGHTS
-
-=head2 Your Plugins
-
-Plugin::Tiny requires that your plugins are objects (a package with new). 
-Plugin::Tiny uses Moose internally, but this being perl you are of course free 
-to use whatever object system you like.
-
-    package My::Plugin; #a complete plugin that doesn't do very much
-    use Moose; 
-    
-    sub do_something {
-        print "Hello World\n";
-    }
-    
-    1;
 
 =head2 Recommendation: First Register Then Do Things
 
@@ -385,6 +390,10 @@ phase. You still need unique phases for each plugin:
 #
 # PRIVATE
 #
+
+sub _debug {
+    print $_[1]."\n" if $_[0]->debug;
+}
 
 __PACKAGE__->meta->make_immutable;
 
