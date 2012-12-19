@@ -1,5 +1,4 @@
-{next}
-v0.007
+{{$NEXT}}
 - pod rewrites
 - allow one or multiple roles both for constructor and during register
 v0.006
