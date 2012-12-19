@@ -21,7 +21,9 @@
       },
       "develop" : {
          "requires" : {
-            "Test::Pod" : "1.41"
+            "Pod::Coverage::TrustPod" : "0",
+            "Test::Pod" : "1.41",
+            "Test::Pod::Coverage" : "1.08"
          }
       },
       "runtime" : {
@@ -58,6 +60,6 @@
          "web" : "https://github.com/mokko/p5-Plugin-Tiny"
       }
    },
-   "version" : "0.006"
+   "version" : "0.007"
 }
 

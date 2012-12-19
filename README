@@ -2,22 +2,25 @@ NAME
     Plugin::Tiny - A tiny plugin system for perl
 
 VERSION
-    version 0.006
+    version 0.007
 
 SYNOPSIS
-      use Plugin::Tiny;           #in your core
+      #a complete 'Hello World' plugin
+      package My::Plugin; 
+      use Moose; #optional; required is an object with new as constructor
+    
+      sub do_something { print "Hello World @_\n" }
+    
+      1;
+
+      #in your core
+      use Plugin::Tiny;           
       my $ps=Plugin::Tiny->new(); #plugin system
   
-      #load plugin_class (and perhaps phase) from your configuration
-      $ps->register(
-        phase=>$phase,         #optional
-        plugin=>$plugin_class, #required
-        role=>$role,           #optional
-        arg1=>$arg1,           #optional
-        arg2=>$arg2,           #optional
-      );
+      #load My::Plugin: require, import, return My::Plugin->new(@_)
+      my $plugin=$ps->register(plugin=>'My::Plugin');
 
-      #execute your plugin's methods 
+      #elsewhere in core: execute your plugin's methods 
       my $plugin=$ps->get_plugin ($phase); 
       $plugin->do_something(@args);
 
@@ -28,12 +31,11 @@ DESCRIPTION
 
 ATTRIBUTES
   debug
-    expects a boolean. Prints additional info to STDOUT.
+    Optional. Expects a boolean. Prints additional info to STDOUT.
 
   prefix
-    Optional init argument. You can have the prefix added to all plugin
-    classes you register so save some typing and force plugins in your
-    namespace:
+    Optional. You can have the prefix added to all plugin classes you
+    register so save some typing and force plugins in your namespace:
 
       #without prefix  
       my $ps=Plugin::Tiny->new  
@@ -46,41 +48,20 @@ ATTRIBUTES
       $ps->register(plugin='Example2');
 
   role
-    Optional init argument. A default role to be applied to all plugins. Can
+    Optional. One or more roles that all plugins have to be able to do. Can
     be overwritten in "register".
+
+        #either as ArrayRef 
+        role=>['Role::One', Role::Two]
+        #or a scalar
+        role=>'Role::One'
 
 METHODS
   register
     Registers a plugin, i.e. loads it and makes a new plugin object. Needs a
     plugin package name (plugin). Returns the newly created plugin object on
-    success. Confesses on error.
-
-   Arguments
-   plugin
-    The package name of the plugin. Required. Internally, the value of
-    "prefix" is prepended to plugin, if set.
-
-   phase
-    A phase asociated with the plugin. Optional. If not specified,
-    Plugin::Tiny uses "default_phase" to determine the phase.
-
-   role
-    A role that the plugin has to appply. Optional. Specify role=>undef to
-    unset global roles.
-
-   force
-    Force re-registration of a previously used phase. Optional.
-
-    Plugin::Tiny confesses if you try to register a phase that has
-    previously been assigned. To overwrite this message make force true.
-
-    With force both plugins will be loaded (required, imported) and both
-    return new objects for their respective plugin classes, but after the
-    second plugin is made, the first one can't be accessed anymore through
-    get_plugin.
-
-   all other arguments
-    Remaining arguments are passed down to the plugin constructor. Optional.
+    success. Confesses on error. Remaining arguments are passed down to the
+    plugin constructor:
 
         $obj=$ps->register(
             plugin=>$plugin_class,   #required
@@ -91,6 +72,36 @@ METHODS
 
     N.B. A side-effect of these arguments is that your plugin cannot use
     'phase', 'plugin', 'role', 'force' as named arguments.
+
+    plugin
+        The package name of the plugin. Required. Internally, the value of
+        "prefix" is prepended to plugin, if set.
+
+    phase
+        A phase asociated with the plugin. Optional. If not specified,
+        Plugin::Tiny uses "default_phase" to determine the phase.
+
+    role
+        One or more roles that the plugin has to appply. Optional. Specify
+        role=>undef to unset global roles.
+
+            role=>'Single::Role' #or
+            role=>['Role::One','Role:Two']
+            role=>undef #unset global roles
+
+        Currently, you can't mix global roles (defined via new) with local
+        roles (defined via register).
+
+    force
+        Force re-registration of a previously used phase. Optional.
+
+        Plugin::Tiny confesses if you try to register a phase that has
+        previously been assigned. To overwrite this message make force true.
+
+        With force both plugins will be loaded (required, imported) and both
+        return new objects for their respective plugin classes, but after
+        the second plugin is made, the first one cannot be accessed anymore
+        through get_plugin.
 
   register_bundle
     Registers a bundle of plugins in no particular order. A bundle is just a
@@ -141,31 +152,17 @@ METHODS
         $ps->default_phase(My::Plugin::Long::Example); # returns 'LongExample'
 
   get_class
-    returns the plugin's class. A bit like "ref $plugin". Not sure what it
-    returns on error. Todo!
+    Returns the plugin's class.
 
       $class=$ps->get_class ($plugin);
+
+    Todo: Not sure what it returns on error.
 
   get_phase
     returns the plugin's phase. Returns undef on failure. Normally, you
     should not need this: $phase=$ps->get_phase ($plugin);
 
-SOME THOUGHTS
-  Your Plugins
-    Plugin::Tiny requires that your plugins are objects (a package with
-    new). Plugin::Tiny uses Moose internally, but this being perl you are of
-    course free to use whatever object system you like.
-
-        package My::Plugin; #a complete plugin that doesn't do very much
-        use Moose; 
-    
-        sub do_something {
-            print "Hello World\n";
-        }
-    
-        1;
-
-  Recommendation: First Register Then Do Things
+Recommendation: First Register Then Do Things
     Plugin::Tiny suggests that you first register (load) all your plugins
     before you actually do something with them. Internal "require" / "use"
     of your packages is deferred until runtime. You can control the order in
@@ -173,10 +170,10 @@ SOME THOUGHTS
     manage to load all of them before you do anything, you can forget about
     order.
 
-    You know Plugin::Tiny's phases at compile time, but not which plugins
-    will be loaded.
+    You may know Plugin::Tiny's phases at compile time, but not which
+    plugins will be loaded.
 
-  Recommendation: Require a Plugin Role
+Recommendation: Require a Plugin Role
     You may want to do a plugin role for all you plugins, e.g. to
     standardize the interface for your plugins. Perhaps to make sure that a
     specific sub is available in the plugin:
@@ -186,14 +183,14 @@ SOME THOUGHTS
       with 'Your::App::Role::Plugin';
       #...
 
-  Plugin Bundles
-    You can create bundles of plugins if you hand the plugin system down to
-    the (bundleing) plugin. That way, you can load multiple plugins for one
-    phase. You still need unique phases for each plugin:
+Plugin Bundles
+    You can create bundles of plugins if you pass the plugin system to the
+    (bundling) plugin. That way you can load multiple plugins for one phase.
+    You still need unique phases for each plugin:
 
       package My::Core;
-      use Moose; #optional
-      has 'plugins'=>(
+      use Moose; 
+      has 'plugin_system'=>(
         is=>'ro',
         isa=>'Plugin::Tiny', 
         default=>sub{Plugin::Tiny->new},
@@ -201,15 +198,20 @@ SOME THOUGHTS
 
       sub BUILD {
         $self->plugins->register(
-          phase=>'Scan', 
           plugin=>'PluginBundle', 
-          plugins=>$self->plugins, #plugin system
+          phase=>'Bundle',
+          plugin_system=>$self->plugins, 
         );
       }
 
+      #elsewhere in core
+      my $b=$self->plugin_system->get_plugin ('Bundle');  
+      $b->start();
+
+
       package PluginBundle;
       use Moose;
-      has 'plugins'=>(is=>'ro', isa=>'Plugin::Tiny', required=>1); 
+      has 'plugin_system'=>(is=>'ro', isa=>'Plugin::Tiny', required=>1); 
 
       sub bundle {
           {Plugin::One=>{},Plugin::Two=>{}}

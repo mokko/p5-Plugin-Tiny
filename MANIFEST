@@ -1,5 +1,4 @@
-CHANGES
-CHANGES~
+Changes
 LICENSE
 MANIFEST
 META.json
@@ -7,10 +6,11 @@ META.yml
 Makefile.PL
 README
 lib/Plugin/Tiny.pm
-lib/Plugin/Tutorial.pod.bak
 t/lib/TestRolePlugin.pm
 t/lib/TinySubPlug.pm
 t/lib/TinyTestPlugin.pm
+t/release-no-tabs.t
+t/release-pod-coverage.t
 t/release-pod-syntax.t
 t/release-test-version.t
 t/tiny.t
