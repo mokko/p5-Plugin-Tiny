@@ -4,17 +4,16 @@ use strict;
 use warnings;
 use Carp 'confess';
 use Class::Load 'load_class';
+use Scalar::Util 'blessed', 'reftype';
 use Moose;
 use namespace::autoclean;
-use Scalar::Util 'blessed', 'reftype';
-
 #use Data::Dumper;
 
 =head1 SYNOPSIS
 
   #a complete 'Hello World' plugin
   package My::Plugin; 
-  use Moose; #optional. Required is an object with new as constructor
+  use Moose; #optional; required is an object with new as constructor
     
   sub do_something { print "Hello World @_\n" }
     
@@ -24,10 +23,10 @@ use Scalar::Util 'blessed', 'reftype';
   use Plugin::Tiny;           
   my $ps=Plugin::Tiny->new(); #plugin system
   
-  #load plugin_class from your configuration
-  $ps->register(plugin=>'My::Plugin');
+  #load My::Plugin: require, import, return My::Plugin->new(@_)
+  my $plugin=$ps->register(plugin=>'My::Plugin');
 
-  #execute your plugin's methods 
+  #elsewhere in core: execute your plugin's methods 
   my $plugin=$ps->get_plugin ($phase); 
   $plugin->do_something(@args);  
   
@@ -109,25 +108,31 @@ plugin constructor:
 N.B. A side-effect of these arguments is that your plugin cannot use 'phase', 
 'plugin', 'role', 'force' as named arguments.
 
-=head3 plugin
+=over
+
+=item B<plugin>
 
 The package name of the plugin. Required. Internally, the value of C<prefix>
 is prepended to plugin, if set.
 
-=head3 phase
+=item B<phase>
 
 A phase asociated with the plugin. Optional. If not specified, Plugin::Tiny 
 uses C<default_phase> to determine the phase.
 
-=head3 role
+=item B<role>
 
 One or more roles that the plugin has to appply. Optional. Specify role=>undef 
 to unset global roles.
 
     role=>'Single::Role' #or
     role=>['Role::One','Role:Two']
+    role=>undef #unset global roles
+    
+Currently, you can't mix global roles (defined via new) with local roles 
+(defined via register).
 
-=head3 force
+=item B<force>
 
 Force re-registration of a previously used phase. Optional.
 
@@ -136,7 +141,9 @@ assigned. To overwrite this message make force true.
 
 With force both plugins will be loaded (required, imported) and both return new 
 objects for their respective plugin classes, but after the second plugin is 
-made, the first one can't be accessed anymore through get_plugin.
+made, the first one cannot be accessed anymore through get_plugin.
+
+=back
 
 =cut
 
@@ -318,9 +325,7 @@ sub get_phase {
 
 }
 
-=head1 SOME THOUGHTS
-
-=head2 Recommendation: First Register Then Do Things
+=head1 Recommendation: First Register Then Do Things
 
 Plugin::Tiny suggests that you first register (load) all your plugins before 
 you actually do something with them. Internal C<require> / C<use> of your 
@@ -328,10 +333,10 @@ packages is deferred until runtime. You can control the order in which plugins
 are loaded (in the order you call C<register>), but if you manage to load all 
 of them before you do anything, you can forget about order.
 
-You know Plugin::Tiny's phases at compile time, but not which plugins will be
-loaded.
+You may know Plugin::Tiny's phases at compile time, but not which plugins will 
+be loaded.
 
-=head2 Recommendation: Require a Plugin Role
+=head1 Recommendation: Require a Plugin Role
 
 You may want to do a plugin role for all you plugins, e.g. to standardize
 the interface for your plugins. Perhaps to make sure that a specific sub is
@@ -342,15 +347,15 @@ available in the plugin:
   with 'Your::App::Role::Plugin';
   #...
 
-=head2 Plugin Bundles
+=head1 Plugin Bundles
 
-You can create bundles of plugins if you hand the plugin system down to 
-the (bundleing) plugin. That way, you can load multiple plugins for one 
-phase. You still need unique phases for each plugin:
+You can create bundles of plugins if you pass the plugin system to the 
+(bundling) plugin. That way you can load multiple plugins for one phase. You 
+still need unique phases for each plugin:
 
   package My::Core;
-  use Moose; #optional
-  has 'plugins'=>(
+  use Moose; 
+  has 'plugin_system'=>(
     is=>'ro',
     isa=>'Plugin::Tiny', 
     default=>sub{Plugin::Tiny->new},
@@ -358,15 +363,20 @@ phase. You still need unique phases for each plugin:
 
   sub BUILD {
     $self->plugins->register(
-      phase=>'Scan', 
       plugin=>'PluginBundle', 
-      plugins=>$self->plugins, #plugin system
+      phase=>'Bundle',
+      plugin_system=>$self->plugins, 
     );
   }
 
+  #elsewhere in core
+  my $b=$self->plugin_system->get_plugin ('Bundle');  
+  $b->start();
+
+
   package PluginBundle;
   use Moose;
-  has 'plugins'=>(is=>'ro', isa=>'Plugin::Tiny', required=>1); 
+  has 'plugin_system'=>(is=>'ro', isa=>'Plugin::Tiny', required=>1); 
 
   sub bundle {
       {Plugin::One=>{},Plugin::Two=>{}}

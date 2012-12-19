@@ -1,4 +1,7 @@
 {next}
+v0.007
+- pod rewrites
+- allow one or multiple roles both for constructor and during register
 v0.006
 - slightly better tests
 - confess if phase already registered; overwrite with force
