@@ -1,7 +1,7 @@
 package TinySubPlug;
 use strict;
 use warnings;
-use Moose;
+use Moo;
 #has 'plugin_system' => (is => 'ro', isa => 'Plugin::Tiny', required => 1);
 
 sub do_something {

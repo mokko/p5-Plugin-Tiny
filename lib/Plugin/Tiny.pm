@@ -3,10 +3,11 @@ package Plugin::Tiny;
 use strict;
 use warnings;
 use Carp 'confess';
-use Class::Load 'load_class';
+use Module::Runtime 'use_package_optimistically';
 use Scalar::Util 'blessed';
-use Moose;
-use namespace::autoclean;
+use Moo;
+use MooX::Types::MooseLike::Base qw(Bool Str HashRef ArrayRef Object);
+use namespace::clean;
 
 #use Data::Dumper;
 
@@ -37,11 +38,15 @@ Plugin::Tiny is minimalistic plugin system for perl. Each plugin is associated
 with a keyword (referred to as phase). A limitation of Plugin::Tiny is that 
 each phase can have only one plugin. 
 
+Plugin::Tiny calls itself tiny because it doesn't attempt to solve all problems
+plugin systems could solve, because it consists of one smallish package, and it 
+doesn't depend on a whole lot.
+
 =cut
 
 has '_registry' => (    #href with phases and plugin objects
     is       => 'ro',
-    isa      => 'HashRef[Object]',
+    isa      => HashRef[Object],
     default  => sub { {} },
     init_arg => undef,
 );
@@ -52,7 +57,7 @@ Optional. Expects a boolean. Prints additional info to STDOUT.
 
 =cut
 
-has 'debug' => (is => 'ro', isa => 'Bool', default => sub {0});
+has 'debug' => (is => 'ro', isa => Bool, default => sub {0});
 
 =attr prefix
 
@@ -71,7 +76,7 @@ register so save some typing and force plugins in your namespace:
 
 =cut
 
-has 'prefix' => (is => 'ro', isa => 'Str');
+has 'prefix' => (is => 'ro', isa => Str);
 
 =attr role
 
@@ -83,7 +88,7 @@ overwritten in C<register>.
 
 =cut
 
-has 'role' => (is => 'ro', isa => 'ArrayRef[Str]');
+has 'role' => (is => 'ro', isa => ArrayRef[Str]);
 
 
 #
@@ -175,7 +180,7 @@ overwrite the current plugin with a new one, use 'force=>1'.
 END
     }
 
-    load_class($plugin) or confess "Can't load '$plugin'";
+     use_package_optimistically($plugin)->can('new') or confess "Can't load '$plugin'";
 
     my $roles = $self->role if $self->role;    #default role
     $roles = delete $args{role} if exists $args{role};
@@ -404,6 +409,10 @@ still need unique phases for each plugin:
     my $one=$self->plugins->get('One');
     $one->do_something(@args);  
   }
+
+=head1 CONTRIBUTORS
+
+Thanks to Toby Inkster for making Plugin::Tiny tinier.
   
 =cut
 
@@ -414,7 +423,5 @@ still need unique phases for each plugin:
 sub _debug {
     print $_[1] . "\n" if $_[0]->debug;
 }
-
-__PACKAGE__->meta->make_immutable;
 
 1;
