@@ -4,8 +4,9 @@ use warnings;
 
 #use File::Spec;
 #use lib File::Spec->catfile('t', 'lib');
-use Moose;
-has 'plugin_system' => (is => 'ro', isa => 'Plugin::Tiny', required => 1);
+use Moo;
+use MooX::Types::MooseLike::Base 'InstanceOf';
+has 'plugin_system' => (is => 'ro', isa => InstanceOf['Plugin::Tiny'], required => 1);
 with 'TestRolePlugin';
 
 #acts as bundle, i.e. loads other plugins

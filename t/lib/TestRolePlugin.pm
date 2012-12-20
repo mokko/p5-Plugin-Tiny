@@ -1,5 +1,5 @@
 package TestRolePlugin;
-use Moose::Role;
+use Moo::Role;
 use strict;
 use warnings;
 requires 'some_method';
