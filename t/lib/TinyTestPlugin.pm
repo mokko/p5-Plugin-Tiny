@@ -1,11 +1,11 @@
 package TinyTestPlugin;
 use strict;
 use warnings;
-
+use Moo;
+use MooX::Types::MooseLike::Base 'InstanceOf';
 #use File::Spec;
 #use lib File::Spec->catfile('t', 'lib');
 use Moo;
-use MooX::Types::MooseLike::Base 'InstanceOf';
 has 'plugin_system' => (is => 'ro', isa => InstanceOf['Plugin::Tiny'], required => 1);
 with 'TestRolePlugin';
 

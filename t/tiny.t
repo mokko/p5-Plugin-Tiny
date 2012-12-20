@@ -16,13 +16,14 @@ use_ok('Plugin::Tiny');
 
 package SampleCore;
 use Moo;
-use MooX::Types::MooseLike::Base 'InstanceOf';
+use MooX::Types::MooseLike::Base qw(InstanceOf);
 has 'plugin_system' => (is => 'ro', isa => InstanceOf['Plugin::Tiny'], required => 1);
 1;
 
 package SampleBundle;
 use Moo;
-use MooX::Types::MooseLike::Base 'Object';
+use MooX::Types::MooseLike::Base qw(Object);
+
 has 'core' => (is => 'ro', isa => Object, required => 1);
 1;
 

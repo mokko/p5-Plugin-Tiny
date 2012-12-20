@@ -2,7 +2,7 @@ NAME
     Plugin::Tiny - A tiny plugin system for perl
 
 VERSION
-    version 0.009
+    version 0.010
 
 SYNOPSIS
       #a complete 'Hello World' plugin
@@ -28,6 +28,10 @@ DESCRIPTION
     Plugin::Tiny is minimalistic plugin system for perl. Each plugin is
     associated with a keyword (referred to as phase). A limitation of
     Plugin::Tiny is that each phase can have only one plugin.
+
+    Plugin::Tiny calls itself tiny because it doesn't attempt to solve all
+    problems plugin systems could solve, because it consists of one smallish
+    package, and it doesn't depend on a whole lot.
 
 ATTRIBUTES
   debug
@@ -55,6 +59,9 @@ ATTRIBUTES
         role=>'Role::One'                   #or a scalar
 
 METHODS
+  BUILDARGS
+    Re-write init argument 'role' as arrayref if not yet arrayref.
+
   register
     Registers a plugin, i.e. loads it and makes a new plugin object. Needs a
     plugin package name (plugin). Returns the newly created plugin object on
@@ -227,6 +234,9 @@ Plugin Bundles
         my $one=$self->plugins->get('One');
         $one->do_something(@args);  
       }
+
+CONTRIBUTORS
+    Thanks to Toby Inkster for making Plugin::Tiny tinier.
 
 AUTHOR
     Maurice Mengel <mauricemengel@gmail.com>

@@ -1,3 +1,6 @@
+0.010     2012-12-20 18:25:53 America/New_York
+- make Plugin::Tiny tinier by using modules with smaller footprint; good-bye
+  Moose, hello Moo; thanks to Toby Inkster!
 0.009     2012-12-19 23:32:14 America/New_York
 - fix type incompatibility for single role as Str in new, introduced in 0.007
 - add corresponding tests
