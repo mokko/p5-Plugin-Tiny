@@ -95,12 +95,17 @@ has 'role' => (is => 'ro', isa => ArrayRef[Str]);
 # METHODS
 #
 
+=method BUILDARGS
+
+Re-write init argument 'role' as arrayref if not yet arrayref.
+
+=cut
+
 around BUILDARGS => sub {
     my $orig  = shift;
     my $class = shift;
     my %args  = @_;
 
-    #re-write as arrayref if not yet arrayref
     if ($args{role} && ref ($args{role}) ne 'ARRAY'){
         $args{role}=[$args{role}];
     }
