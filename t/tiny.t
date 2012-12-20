@@ -28,11 +28,23 @@ has 'core' => (is => 'ro', isa => 'Object', required => 1);
 package main;
 
 note "simple new and register";
-my $ps = Plugin::Tiny->new();
-ok($ps, 'new');
+my $ps = Plugin::Tiny->new(role => ['TestRolePlugin']);
+ok($ps, 'new with role as ArrayRef');
+
+$ps = Plugin::Tiny->new(role => 'TestRolePlugin');
+ok($ps, 'new with role as String');
+
+$ps = Plugin::Tiny->new(prefix => 'Bla');
+ok($ps, 'new with prefix');
+
+$ps = Plugin::Tiny->new();
+ok($ps, 'new no args');
+
+
+
 
 ok( $ps->register(
-        plugin        => 'TinyTestPlugin',    #required
+        plugin        => 'TinyTestPlugin',                 #required
         plugin_system => $ps,
         bar           => 'tiny',
     ),
@@ -40,7 +52,7 @@ ok( $ps->register(
 );
 ok( $ps->register(
         phase         => 'foo',
-        plugin        => 'TinyTestPlugin',    #required
+        plugin        => 'TinyTestPlugin',                 #required
         plugin_system => $ps,
         bar           => 'tiny',
     ),
@@ -50,7 +62,7 @@ ok( $ps->register(
 try {
     $ps->register(
         phase         => 'foo',
-        plugin        => 'TinyTestPlugin',    #required
+        plugin        => 'TinyTestPlugin',                 #required
         plugin_system => $ps,
     );
 }
@@ -60,7 +72,7 @@ finally {
 
 ok( $ps->register(
         phase         => 'foo',
-        plugin        => 'TinyTestPlugin',    #required
+        plugin        => 'TinyTestPlugin',                 #required
         plugin_system => $ps,
         force         => 1
     ),
@@ -69,7 +81,7 @@ ok( $ps->register(
 
 try {
     $ps->register(
-        plugin => 'TinyTestPlugin',           #required
+        plugin => 'TinyTestPlugin',                        #required
         bar    => 'tiny',
     );
 }
@@ -81,7 +93,7 @@ finally {
 try {
     $ps->register(
         phase  => 'foo',
-        plugin => 'nonexistingPlugin',        #required
+        plugin => 'nonexistingPlugin',                     #required
         bar    => 'tiny',
     );
 }
@@ -92,7 +104,7 @@ finally {
 try {
     $ps->register(
         phase  => 'foo',
-        plugin => 'nonexistingPlugin',        #required
+        plugin => 'nonexistingPlugin',                     #required
         force  => 1,
     );
 }
@@ -102,7 +114,7 @@ finally {
 
 ok( $ps->register(
         phase         => 'foo',
-        plugin        => 'TinyTestPlugin',    #required
+        plugin        => 'TinyTestPlugin',                 #required
         plugin_system => $ps,
         role          => 'TestRolePlugin',
         force         => 1
@@ -112,9 +124,9 @@ ok( $ps->register(
 
 ok( $ps->register(
         phase         => 'foo',
-        plugin        => 'TinyTestPlugin',    #required
+        plugin        => 'TinyTestPlugin',                       #required
         plugin_system => $ps,
-        role          => ['TestRolePlugin','TestRolePlugin'],
+        role          => ['TestRolePlugin', 'TestRolePlugin'],
         force         => 1
     ),
     'register with multiple roles succeeds'
@@ -165,7 +177,7 @@ is($ps->get_phase($p2), 'bar', 'phase bar');
 #
 is($ps->default_phase('TinyTestPlugin'), 'TinyTestPlugin', 'default_phase');
 is($ps->default_phase('A::B::C'), 'C', 'default_phase');
-$ps = Plugin::Tiny->new(prefix => 'A::'); #resets registry
+$ps = Plugin::Tiny->new(prefix => 'A::');    #resets registry
 is($ps->default_phase('A::B::C'), 'BC', 'default_phase');
 
 

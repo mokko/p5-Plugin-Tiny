@@ -4,9 +4,10 @@ use strict;
 use warnings;
 use Carp 'confess';
 use Class::Load 'load_class';
-use Scalar::Util 'blessed', 'reftype';
+use Scalar::Util 'blessed';
 use Moose;
 use namespace::autoclean;
+
 #use Data::Dumper;
 
 =head1 SYNOPSIS
@@ -14,10 +15,9 @@ use namespace::autoclean;
   #a complete 'Hello World' plugin
   package My::Plugin; 
   use Moose; #optional; required is an object with new as constructor
-    
   sub do_something { print "Hello World @_\n" }
-    
   1;
+
 
   #in your core
   use Plugin::Tiny;           
@@ -25,6 +25,7 @@ use namespace::autoclean;
   
   #load My::Plugin: require, import, return My::Plugin->new(@_)
   my $plugin=$ps->register(plugin=>'My::Plugin');
+
 
   #elsewhere in core: execute your plugin's methods 
   my $plugin=$ps->get_plugin ($phase); 
@@ -77,10 +78,8 @@ has 'prefix' => (is => 'ro', isa => 'Str');
 Optional. One or more roles that all plugins have to be able to do. Can be 
 overwritten in C<register>.
 
-    #either as ArrayRef 
-    role=>['Role::One', Role::Two]
-    #or a scalar
-    role=>'Role::One'
+    role=>['Role::One', Role::Two]      #either as ArrayRef 
+    role=>'Role::One'                   #or a scalar
 
 =cut
 
@@ -90,6 +89,18 @@ has 'role' => (is => 'ro', isa => 'ArrayRef[Str]');
 #
 # METHODS
 #
+
+around BUILDARGS => sub {
+    my $orig  = shift;
+    my $class = shift;
+    my %args  = @_;
+
+    #re-write as arrayref if not yet arrayref
+    if ($args{role} && ref ($args{role}) ne 'ARRAY'){
+        $args{role}=[$args{role}];
+    }
+    return $class->$orig(%args);
+};
 
 =method register
 
@@ -101,19 +112,17 @@ plugin constructor:
     $obj=$ps->register(
         plugin=>$plugin_class,   #required
         args=>$more_args,        #optional
-    );
-    #Plugin::Tiny return result of
-    #$plugin_class->new (args=>$args);
+    ); #returns result of $plugin_class->new (args=>$args);
 
-N.B. A side-effect of these arguments is that your plugin cannot use 'phase', 
-'plugin', 'role', 'force' as named arguments.
+N.B. Your plugin cannot use 'phase', 'plugin', 'role', 'force' as named 
+arguments.
 
 =over
 
 =item B<plugin>
 
 The package name of the plugin. Required. Internally, the value of C<prefix>
-is prepended to plugin, if set.
+is prepended to plugin.
 
 =item B<phase>
 
@@ -123,21 +132,19 @@ uses C<default_phase> to determine the phase.
 =item B<role>
 
 One or more roles that the plugin has to appply. Optional. Specify role=>undef 
-to unset global roles.
+to unset global roles. Currently, you can't mix global roles (defined via new) 
+with local roles (defined via register).
 
     role=>'Single::Role' #or
     role=>['Role::One','Role:Two']
     role=>undef #unset global roles
     
-Currently, you can't mix global roles (defined via new) with local roles 
-(defined via register).
-
 =item B<force>
 
 Force re-registration of a previously used phase. Optional.
 
-Plugin::Tiny confesses if you try to register a phase that has previously been
-assigned. To overwrite this message make force true.
+Normally, Plugin::Tiny confesses if you try to register a phase that has 
+previously been assigned. To overwrite this message make force true.
 
 With force both plugins will be loaded (required, imported) and both return new 
 objects for their respective plugin classes, but after the second plugin is 
@@ -176,10 +183,10 @@ END
     #rewrite scalar as arrayref
     $roles = [$roles] if ($roles && !ref $roles);
 
-    if ($roles && reftype $roles eq 'ARRAY') {
+    if ($roles && ref $roles eq 'ARRAY') {
         foreach my $role (@{$roles}) {
             if ($plugin->DOES($role)) {
-                $self->_debug ("Plugin '$plugin' does role '$role'");
+                $self->_debug("Plugin '$plugin' does role '$role'");
             }
             else {
                 confess qq(Plugin '$plugin' doesn't do role '$role');
@@ -189,7 +196,7 @@ END
 
     $self->{_registry}{$phase} = $plugin->new(%args)
       || confess "Can't make $plugin";
-    $self->_debug ("register $plugin [$phase]");
+    $self->_debug("register $plugin [$phase]");
     return $self->{_registry}{$phase};
 }
 
@@ -215,8 +222,9 @@ Confesses if a plugin cannot be registered. Otherwise returns $bundle or undef.
   $ps->register_bundle(bundle)
 
 If you want to add or remove plugins, use hashref as usual:
-  undef $bundle->{$plugin}; #remove a plugin using package name
-  $bundle->{'My::Plugin'}={phase=>'foo'}; #add another plugin
+
+  undef $bundle->{$plugin};                #remove a plugin using package name
+  $bundle->{'My::Plugin'}={phase=>'foo'};  #add another plugin
 
 To facilitate inheritance of your plugins perhaps you put the hashref in a 
 separate sub, so a child bundle can extend or remove plugins from yours.
@@ -240,7 +248,7 @@ sub register_bundle {
 
 Returns the plugin object associated with the phase. Returns undef on failure.
 
-  $plugin=$ps->get_plugin ($phase);
+  my $plugin=$ps->get_plugin ($phase);
 
 =cut
 
@@ -258,11 +266,11 @@ Makes a default phase from (the plugin's) class name. Expects a $plugin_class.
 Returns scalar or undef. If prefix is defined it use tail and removes all '::'. 
 If no prefix is set default_phase returns the last element of the class name:
 
-    $ps=Plugin-Tiny->new;
-    $ps->default_phase(My::Plugin::Long::Example); # returns 'Example'
+    my $ps=Plugin-Tiny->new;
+    $ps->default_phase(My::Plugin::Long::Example); #returns 'Example'
 
     $ps=Plugin-Tiny->new(prefix=>'My::Plugin::');
-    $ps->default_phase(My::Plugin::Long::Example); # returns 'LongExample'
+    $ps->default_phase(My::Plugin::Long::Example); #returns 'LongExample'
 
 =cut
 
@@ -284,16 +292,16 @@ sub default_phase {
 }
 
 
+#Todo: Not sure what it returns on error.
 =method get_class 
 
-Returns the plugin's class. 
+Returns the plugin's class (package name). Expects plugin (not its package 
+name). Croaks on error.
 
-  $class=$ps->get_class ($plugin);
-
-Todo: Not sure what it returns on error.
-
+  my $class=$ps->get_class ($plugin);
 
 =cut 
+
 
 sub get_class {
     my $self = shift;
@@ -303,9 +311,11 @@ sub get_class {
 
 =method get_phase
 
-returns the plugin's phase. Returns undef on failure. Normally, you should not
-need this:
-  $phase=$ps->get_phase ($plugin);
+returns the plugin's phase. Expects plugin (not its package name). Returns 
+undef on failure. (You will not normally need get_phase, because typically your 
+code knows the phases.)
+
+  my $phase=$ps->get_phase ($plugin);
 
 =cut 
 
@@ -402,7 +412,7 @@ still need unique phases for each plugin:
 #
 
 sub _debug {
-    print $_[1]."\n" if $_[0]->debug;
+    print $_[1] . "\n" if $_[0]->debug;
 }
 
 __PACKAGE__->meta->make_immutable;
