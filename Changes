@@ -1,3 +1,6 @@
+0.009     2012-12-19 23:32:14 America/New_York
+- fix type incompatibility for single role as Str in new, introduced in 0.007
+- add corresponding tests
 0.008     2012-12-19 12:52:24 America/New_York
 - re-release just to test new dzil config
 0.007     2012-12-19 12:39:02 America/New_York
