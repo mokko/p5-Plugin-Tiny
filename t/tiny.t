@@ -15,13 +15,15 @@ use lib File::Spec->catfile('t', 'lib');
 use_ok('Plugin::Tiny');
 
 package SampleCore;
-use Moose;
-has 'plugin_system' => (is => 'ro', isa => 'Plugin::Tiny', required => 1);
+use Moo;
+use MooX::Types::MooseLike::Base 'InstanceOf';
+has 'plugin_system' => (is => 'ro', isa => InstanceOf['Plugin::Tiny'], required => 1);
 1;
 
 package SampleBundle;
-use Moose;
-has 'core' => (is => 'ro', isa => 'Object', required => 1);
+use Moo;
+use MooX::Types::MooseLike::Base 'Object';
+has 'core' => (is => 'ro', isa => Object, required => 1);
 1;
 
 

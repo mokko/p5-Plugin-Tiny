@@ -6,29 +6,30 @@ package Plugin::Tiny;
 use strict;
 use warnings;
 use Carp 'confess';
-use Class::Load 'load_class';
+use Module::Runtime 'use_package_optimistically';
 use Scalar::Util 'blessed';
-use Moose;
-use namespace::autoclean;
+use Moo;
+use MooX::Types::MooseLike::Base qw(Bool Str HashRef ArrayRef Object);
+use namespace::clean;
 
 #use Data::Dumper;
 
 
 has '_registry' => (    #href with phases and plugin objects
     is       => 'ro',
-    isa      => 'HashRef[Object]',
+    isa      => HashRef[Object],
     default  => sub { {} },
     init_arg => undef,
 );
 
 
-has 'debug' => (is => 'ro', isa => 'Bool', default => sub {0});
+has 'debug' => (is => 'ro', isa => Bool, default => sub {0});
 
 
-has 'prefix' => (is => 'ro', isa => 'Str');
+has 'prefix' => (is => 'ro', isa => Str);
 
 
-has 'role' => (is => 'ro', isa => 'ArrayRef[Str]');
+has 'role' => (is => 'ro', isa => ArrayRef[Str]);
 
 
 #
@@ -69,7 +70,8 @@ overwrite the current plugin with a new one, use 'force=>1'.
 END
     }
 
-    load_class($plugin) or confess "Can't load '$plugin'";
+    use_package_optimistically($plugin)->can('new')
+        or confess "Can't load '$plugin'";
 
     my $roles = $self->role if $self->role;    #default role
     $roles = delete $args{role} if exists $args{role};
