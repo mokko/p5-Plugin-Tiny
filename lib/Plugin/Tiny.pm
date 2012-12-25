@@ -95,12 +95,11 @@ has 'role' => (is => 'ro', isa => ArrayRef[Str]);
 # METHODS
 #
 
-=method BUILDARGS
-
-Re-write init argument 'role' as arrayref if not yet arrayref.
+=for Pod::Coverage BUILDARGS
 
 =cut
 
+#Re-write init argument 'role' as arrayref if not yet arrayref.
 around BUILDARGS => sub {
     my $orig  = shift;
     my $class = shift;
@@ -418,6 +417,14 @@ still need unique phases for each plugin:
 =head1 CONTRIBUTORS
 
 Thanks to Toby Inkster for making Plugin::Tiny tinier.
+ 
+=head1 SEE ALSO
+
+L<Object::Pluggable> 
+L<Module::Pluggable>
+L<MooX::Role::Pluggable>
+L<MooseX::Object::Pluggable>
+L<MooseX::Role::Pluggable>
   
 =cut
 
