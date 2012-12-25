@@ -1,3 +1,5 @@
+{{$NEXT}}
+- pod: add SEE ALSO section; n
 0.010     2012-12-20 18:25:53 America/New_York
 - make Plugin::Tiny tinier by using modules with smaller footprint; good-bye
   Moose, hello Moo; thanks to Toby Inkster!

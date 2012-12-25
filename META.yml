@@ -31,4 +31,4 @@ resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=Plugin-Tiny
   homepage: https://github.com/mokko/p5-Plugin-Tiny/wiki
   repository: git://github.com/mokko/p5-Plugin-Tiny.git
-version: 0.010
+version: 0.011

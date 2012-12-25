@@ -2,7 +2,7 @@ NAME
     Plugin::Tiny - A tiny plugin system for perl
 
 VERSION
-    version 0.010
+    version 0.011
 
 SYNOPSIS
       #a complete 'Hello World' plugin
@@ -59,9 +59,6 @@ ATTRIBUTES
         role=>'Role::One'                   #or a scalar
 
 METHODS
-  BUILDARGS
-    Re-write init argument 'role' as arrayref if not yet arrayref.
-
   register
     Registers a plugin, i.e. loads it and makes a new plugin object. Needs a
     plugin package name (plugin). Returns the newly created plugin object on
@@ -237,6 +234,10 @@ Plugin Bundles
 
 CONTRIBUTORS
     Thanks to Toby Inkster for making Plugin::Tiny tinier.
+
+SEE ALSO
+    Object::Pluggable Module::Pluggable MooX::Role::Pluggable
+    MooseX::Object::Pluggable MooseX::Role::Pluggable
 
 AUTHOR
     Maurice Mengel <mauricemengel@gmail.com>

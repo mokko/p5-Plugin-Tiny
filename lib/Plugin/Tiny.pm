@@ -1,7 +1,7 @@
 #ABSTRACT: A tiny plugin system for perl
 package Plugin::Tiny;
 {
-  $Plugin::Tiny::VERSION = '0.010';
+  $Plugin::Tiny::VERSION = '0.011';
 }
 use strict;
 use warnings;
@@ -37,6 +37,7 @@ has 'role' => (is => 'ro', isa => ArrayRef[Str]);
 #
 
 
+#Re-write init argument 'role' as arrayref if not yet arrayref.
 around BUILDARGS => sub {
     my $orig  = shift;
     my $class = shift;
@@ -183,7 +184,7 @@ Plugin::Tiny - A tiny plugin system for perl
 
 =head1 VERSION
 
-version 0.010
+version 0.011
 
 =head1 SYNOPSIS
 
@@ -246,10 +247,6 @@ overwritten in C<register>.
     role=>'Role::One'                   #or a scalar
 
 =head1 METHODS
-
-=head2 BUILDARGS
-
-Re-write init argument 'role' as arrayref if not yet arrayref.
 
 =head2 register
 
@@ -363,6 +360,8 @@ code knows the phases.)
 
   my $phase=$ps->get_phase ($plugin);
 
+=for Pod::Coverage BUILDARGS
+
 =head1 Recommendation: First Register Then Do Things
 
 Plugin::Tiny suggests that you first register (load) all your plugins before 
@@ -436,6 +435,14 @@ still need unique phases for each plugin:
 =head1 CONTRIBUTORS
 
 Thanks to Toby Inkster for making Plugin::Tiny tinier.
+
+=head1 SEE ALSO
+
+L<Object::Pluggable> 
+L<Module::Pluggable>
+L<MooX::Role::Pluggable>
+L<MooseX::Object::Pluggable>
+L<MooseX::Role::Pluggable>
 
 =head1 AUTHOR
 
