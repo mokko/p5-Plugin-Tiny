@@ -1,5 +1,4 @@
 {{$NEXT}}
-0.012
 - require at least Moo 1.002000; rt #85734. Thanks RIZEN!
 - changed dist.ini again; should just effect Plugin::Tiny's release cycle; not 
   the module's code.
