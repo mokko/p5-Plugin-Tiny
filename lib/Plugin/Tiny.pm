@@ -1,5 +1,6 @@
 #ABSTRACT: A tiny plugin system for perl
 package Plugin::Tiny;
+
 use strict;
 use warnings;
 use Carp 'confess';
